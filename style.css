@@ -1471,6 +1471,8 @@ body {
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
+        object-fit: cover;
+        pointer-events: auto;
     }
     
     /* Swipe indicator */
@@ -1515,8 +1517,15 @@ body {
         width: 100%;
         height: 100%;
         background: transparent;
-        z-index: 10000;
-        pointer-events: none;
+        z-index: 10001;
+        pointer-events: auto;
+        touch-action: pan-y;
+    }
+    
+    /* Video container touch handling */
+    .video-container {
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -1604,6 +1613,11 @@ body {
         height: auto;
         padding: 15px;
         border-radius: 25px;
+    }
+    
+    /* Hide navigation buttons on mobile in gallery */
+    .lightbox-nav {
+        display: none !important;
     }
     
     .reel-item {
@@ -2489,6 +2503,47 @@ a.social-link {
     z-index: 10000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    overflow: hidden;
+}
+
+/* Gallery swipe hint for mobile */
+.gallery-swipe-hint {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 105, 180, 0.95);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    text-align: center;
+    z-index: 10003;
+    display: block;
+    animation: swipeHintPulse 2s infinite;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    max-width: 300px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.gallery-swipe-hint i {
+    margin-right: 8px;
+    font-size: 14px;
+    animation: verticalBounce 1.5s infinite;
+}
+
+@keyframes swipeHintPulse {
+    0%, 100% {
+        opacity: 0.8;
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.05);
+    }
 }
 
 
@@ -3664,5 +3719,14 @@ a.social-link {
     .social-link {
         padding: 0.4rem 0.6rem;
         font-size: 0.6rem;
+    }
+}
+
+@keyframes verticalBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
     }
 }

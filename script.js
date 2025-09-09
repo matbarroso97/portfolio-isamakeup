@@ -148,17 +148,27 @@ function createLightbox(src, alt, currentIndex) {
         return { src: img.src, alt: img.alt };
     });
     
+    // Detect if mobile
+    const isMobile = window.innerWidth <= 768;
+    
     lightbox.innerHTML = `
         <div class="lightbox-content">
             <span class="lightbox-close">&times;</span>
-            <button class="lightbox-nav lightbox-prev" ${currentIndex === 0 ? 'disabled' : ''}>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="lightbox-nav lightbox-next" ${currentIndex === allImages.length - 1 ? 'disabled' : ''}>
-                <i class="fas fa-chevron-right"></i>
-            </button>
+            ${!isMobile ? `
+                <button class="lightbox-nav lightbox-prev" ${currentIndex === 0 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="lightbox-nav lightbox-next" ${currentIndex === allImages.length - 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            ` : ''}
             <img src="${src}" alt="${alt}" class="lightbox-image">
             <div class="lightbox-counter">${currentIndex + 1} / ${allImages.length}</div>
+            ${isMobile ? `
+                <div class="gallery-swipe-hint">
+                    <i class="fas fa-arrows-alt-v"></i> Deslize para cima/baixo para trocar de foto (clique para esconder)
+                </div>
+            ` : ''}
         </div>
     `;
     
@@ -265,30 +275,33 @@ function createLightbox(src, alt, currentIndex) {
     const prevBtn = lightbox.querySelector('.lightbox-prev');
     const nextBtn = lightbox.querySelector('.lightbox-next');
     
-    [prevBtn, nextBtn].forEach(btn => {
-        btn.style.cssText = `
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, #FF69B4, #FFB6C1);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.3s ease;
-            z-index: 10001;
-            box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
-        `;
-    });
-    
-    prevBtn.style.left = '5px';
-    nextBtn.style.right = '5px';
+    // Only style buttons if they exist (desktop)
+    if (prevBtn && nextBtn) {
+        [prevBtn, nextBtn].forEach(btn => {
+            btn.style.cssText = `
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background: linear-gradient(135deg, #FF69B4, #FFB6C1);
+                color: white;
+                border: none;
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                transition: all 0.3s ease;
+                z-index: 10001;
+                box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
+            `;
+        });
+        
+        prevBtn.style.left = '5px';
+        nextBtn.style.right = '5px';
+    }
     
     const counter = lightbox.querySelector('.lightbox-counter');
     counter.style.cssText = `
@@ -304,12 +317,88 @@ function createLightbox(src, alt, currentIndex) {
         font-weight: 500;
     `;
     
+    // Block page scroll when lightbox opens
+    const scrollY = window.scrollY;
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    
     document.body.appendChild(lightbox);
     
     // Animate in
     setTimeout(() => {
         lightbox.style.opacity = '1';
     }, 10);
+    
+    // Touch events for mobile swipe
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isFirstGalleryOpen = true;
+    
+    function handleGalleryTouchStart(e) {
+        if (!isMobile) return;
+        e.preventDefault();
+        touchStartX = e.touches[0].clientY; // Changed to clientY for vertical swipe
+    }
+    
+    function handleGalleryTouchMove(e) {
+        if (!isMobile) return;
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function handleGalleryTouchEnd(e) {
+        if (!isMobile) return;
+        e.preventDefault();
+        e.stopPropagation();
+        touchEndX = e.changedTouches[0].clientY; // Changed to clientY for vertical swipe
+        handleGallerySwipe();
+    }
+    
+    function handleGallerySwipe() {
+        const swipeThreshold = 50;
+        const diffY = touchStartX - touchEndX; // Now diffY represents vertical movement
+        
+        if (Math.abs(diffY) > swipeThreshold) {
+            if (diffY > 0) {
+                // Swipe up - next image
+                if (currentIndex < allImages.length - 1) {
+                    currentIndex++;
+                    updateGalleryImage(currentIndex);
+                }
+            } else {
+                // Swipe down - previous image
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateGalleryImage(currentIndex);
+                }
+            }
+            
+            // Hide swipe hint on first interaction
+            if (isFirstGalleryOpen) {
+                isFirstGalleryOpen = false;
+                const swipeHint = lightbox.querySelector('.gallery-swipe-hint');
+                if (swipeHint) {
+                    swipeHint.style.display = 'none';
+                }
+            }
+        }
+    }
+    
+    // Add touch events to lightbox
+    lightbox.addEventListener('touchstart', handleGalleryTouchStart, { passive: false });
+    lightbox.addEventListener('touchmove', handleGalleryTouchMove, { passive: false });
+    lightbox.addEventListener('touchend', handleGalleryTouchEnd, { passive: false });
+    
+    // Click to hide swipe hint
+    const swipeHint = lightbox.querySelector('.gallery-swipe-hint');
+    if (swipeHint) {
+        swipeHint.addEventListener('click', () => {
+            swipeHint.style.display = 'none';
+            isFirstGalleryOpen = false;
+        });
+    }
     
     // Navigation functionality
     const updateImage = (newIndex) => {
@@ -318,31 +407,56 @@ function createLightbox(src, alt, currentIndex) {
             lightboxImage.alt = allImages[newIndex].alt;
             counter.textContent = `${newIndex + 1} / ${allImages.length}`;
             
-            prevBtn.disabled = newIndex === 0;
-            nextBtn.disabled = newIndex === allImages.length - 1;
-            
-            prevBtn.style.opacity = newIndex === 0 ? '0.5' : '1';
-            nextBtn.style.opacity = newIndex === allImages.length - 1 ? '0.5' : '1';
+            // Only update button states if buttons exist (desktop)
+            if (prevBtn && nextBtn) {
+                prevBtn.disabled = newIndex === 0;
+                nextBtn.disabled = newIndex === allImages.length - 1;
+                
+                prevBtn.style.opacity = newIndex === 0 ? '0.5' : '1';
+                nextBtn.style.opacity = newIndex === allImages.length - 1 ? '0.5' : '1';
+            }
         }
     };
     
-    prevBtn.addEventListener('click', () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            updateImage(currentIndex);
-        }
-    });
+    // Function for swipe navigation
+    const updateGalleryImage = (newIndex) => {
+        updateImage(newIndex);
+    };
     
-    nextBtn.addEventListener('click', () => {
-        if (currentIndex < allImages.length - 1) {
-            currentIndex++;
-            updateImage(currentIndex);
-        }
-    });
+    // Only add event listeners if buttons exist (desktop)
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateImage(currentIndex);
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < allImages.length - 1) {
+                currentIndex++;
+                updateImage(currentIndex);
+            }
+        });
+    }
     
     // Close functionality
     const closeLightbox = () => {
         lightbox.style.opacity = '0';
+        
+        // Restore page scroll
+        const scrollY = document.body.style.top;
+        document.body.style.position = 'static';
+        document.body.style.top = '';
+        document.body.style.width = 'auto';
+        document.body.style.overflow = 'auto';
+        
+        if (scrollY) {
+            window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
+        
         setTimeout(() => {
             document.body.removeChild(lightbox);
         }, 300);
@@ -380,18 +494,21 @@ function createLightbox(src, alt, currentIndex) {
         closeBtn.style.transform = 'scale(1)';
     });
     
-    [prevBtn, nextBtn].forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-            if (!btn.disabled) {
-                btn.style.background = 'rgba(255, 105, 180, 1)';
-                btn.style.transform = 'translateY(-50%) scale(1.1)';
-            }
+    // Only add hover effects if buttons exist (desktop)
+    if (prevBtn && nextBtn) {
+        [prevBtn, nextBtn].forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                if (!btn.disabled) {
+                    btn.style.background = 'rgba(255, 105, 180, 1)';
+                    btn.style.transform = 'translateY(-50%) scale(1.1)';
+                }
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.background = 'rgba(255, 105, 180, 0.8)';
+                btn.style.transform = 'translateY(-50%) scale(1)';
+            });
         });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.background = 'rgba(255, 105, 180, 0.8)';
-            btn.style.transform = 'translateY(-50%) scale(1)';
-        });
-    });
+    }
 }
 
 // Form handling with animation
@@ -673,34 +790,20 @@ function initVideoTabs() {
     const generalContent = document.getElementById('general');
     const advertisingContent = document.getElementById('advertising');
     
-    console.log('Elementos encontrados:');
-    console.log('General button:', generalBtn);
-    console.log('Advertising button:', advertisingBtn);
-    console.log('General content:', generalContent);
-    console.log('Advertising content:', advertisingContent);
-    
     if (generalBtn && advertisingBtn && generalContent && advertisingContent) {
-        console.log('Configurando abas...');
-        
         // Configurar abas
         generalBtn.onclick = function() {
-            console.log('Clique em Vídeos Gerais');
             generalContent.style.display = 'block';
             advertisingContent.style.display = 'none';
             generalBtn.classList.add('active');
             advertisingBtn.classList.remove('active');
-            console.log('General display:', generalContent.style.display);
-            console.log('Advertising display:', advertisingContent.style.display);
         };
         
         advertisingBtn.onclick = function() {
-            console.log('Clique em Publicidade');
             generalContent.style.display = 'none';
             advertisingContent.style.display = 'block';
             advertisingBtn.classList.add('active');
             generalBtn.classList.remove('active');
-            console.log('General display:', generalContent.style.display);
-            console.log('Advertising display:', advertisingContent.style.display);
         };
         
         // Estado inicial
@@ -708,9 +811,6 @@ function initVideoTabs() {
         advertisingContent.style.display = 'none';
         generalBtn.classList.add('active');
         advertisingBtn.classList.remove('active');
-        console.log('Abas configuradas!');
-    } else {
-        console.error('Elementos não encontrados!');
     }
 }
 
@@ -734,6 +834,8 @@ function initVideoModal() {
     let isMobile = window.innerWidth <= 768;
     let touchStartY = 0;
     let touchEndY = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
     let isVideoPlaying = false;
     let isFirstModalOpen = true;
 
@@ -796,6 +898,15 @@ function initVideoModal() {
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             
+            // iOS specific: prevent fullscreen video
+            if (isMobile) {
+                modalVideo.setAttribute('webkit-playsinline', 'true');
+                modalVideo.setAttribute('playsinline', 'true');
+                modalVideo.setAttribute('x5-playsinline', 'true');
+                modalVideo.setAttribute('x5-video-player-type', 'h5');
+                modalVideo.setAttribute('x5-video-player-fullscreen', 'false');
+            }
+            
             // Add scroll event listener when modal opens
             modal.addEventListener('wheel', handleWheel, { passive: false });
             document.body.style.width = '100%';
@@ -818,6 +929,14 @@ function initVideoModal() {
             currentVideoIndex = index;
             updateVideoCounter();
             
+            // iOS specific video attributes to prevent fullscreen
+            modalVideo.setAttribute('playsinline', 'true');
+            modalVideo.setAttribute('webkit-playsinline', 'true');
+            modalVideo.setAttribute('x5-playsinline', 'true');
+            modalVideo.setAttribute('x5-video-player-type', 'h5');
+            modalVideo.setAttribute('x5-video-player-fullscreen', 'false');
+            modalVideo.setAttribute('x5-video-orientation', 'portraint');
+            
             // Reset progress bar
             if (progressBar) {
                 progressBar.style.width = '0%';
@@ -828,26 +947,34 @@ function initVideoModal() {
     // Touch events for mobile swipe gestures
     function handleTouchStart(e) {
         if (!isMobile) return;
+        e.preventDefault();
         touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
     }
 
     function handleTouchMove(e) {
         if (!isMobile) return;
         e.preventDefault();
+        e.stopPropagation();
     }
 
     function handleTouchEnd(e) {
         if (!isMobile) return;
+        e.preventDefault();
+        e.stopPropagation();
         touchEndY = e.changedTouches[0].clientY;
+        touchEndX = e.changedTouches[0].clientX;
         handleSwipe();
     }
 
     function handleSwipe() {
         const swipeThreshold = 50;
-        const diff = touchStartY - touchEndY;
-
-        if (Math.abs(diff) > swipeThreshold) {
-            if (diff > 0) {
+        const diffY = touchStartY - touchEndY;
+        const diffX = Math.abs(touchStartX - touchEndX);
+        
+        // Only process vertical swipes (ignore horizontal swipes)
+        if (Math.abs(diffY) > swipeThreshold && diffX < 100) {
+            if (diffY > 0) {
                 nextVideo();
             } else {
                 previousVideo();
@@ -915,10 +1042,26 @@ function initVideoModal() {
         }
     }
 
-    // Touch events for mobile
-    modal.addEventListener('touchstart', handleTouchStart, { passive: true });
+    // Touch events for mobile - add to video container and overlay
+    const videoContainer = document.querySelector('.video-container');
+    const videoOverlay = document.querySelector('.video-overlay');
+    
+    if (videoContainer) {
+        videoContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+        videoContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+        videoContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+    
+    if (videoOverlay) {
+        videoOverlay.addEventListener('touchstart', handleTouchStart, { passive: false });
+        videoOverlay.addEventListener('touchmove', handleTouchMove, { passive: false });
+        videoOverlay.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+    
+    // Also add to modal for backup
+    modal.addEventListener('touchstart', handleTouchStart, { passive: false });
     modal.addEventListener('touchmove', handleTouchMove, { passive: false });
-    modal.addEventListener('touchend', handleTouchEnd, { passive: true });
+    modal.addEventListener('touchend', handleTouchEnd, { passive: false });
     
     // Scroll events for desktop - will be added when modal opens
     
@@ -1045,11 +1188,40 @@ function createVideoIcons() {
     }
 }
 
+// Lazy Loading para vídeos
+function initLazyLoading() {
+    const videoElements = document.querySelectorAll('video[data-src]');
+    
+    const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const video = entry.target;
+                const src = video.getAttribute('data-src');
+                
+                if (src) {
+                    video.src = src;
+                    video.removeAttribute('data-src');
+                    video.load(); // Força o carregamento
+                }
+                
+                videoObserver.unobserve(video);
+            }
+        });
+    }, {
+        rootMargin: '50px' // Carrega 50px antes de entrar na tela
+    });
+    
+    videoElements.forEach(video => {
+        videoObserver.observe(video);
+    });
+}
+
 // Executar quando a página carregar
 window.onload = function() {
     initVideoTabs();
     initVideoModal();
     createVideoIcons();
+    initLazyLoading();
 };
 
 // Video play button functionality
@@ -1062,12 +1234,8 @@ playButtons.forEach(btn => {
             btn.style.transform = 'translate(-50%, -50%) scale(1)';
         }, 150);
         
-        // Here you could add actual video playing functionality
-        console.log('Playing video...');
     });
 });
-
-// Social media links functionality - removed to allow normal link behavior
 
 // Brand items hover effect
 const brandItems = document.querySelectorAll('.brand-item');
