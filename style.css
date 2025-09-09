@@ -1336,6 +1336,9 @@ body {
         pointer-events: auto !important;
         touch-action: manipulation !important;
         box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
     }
     
     .video-close:hover {
@@ -3546,6 +3549,12 @@ a.social-link {
         width: 35px;
         height: 35px;
         font-size: 16px;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+        z-index: 10002 !important;
     }
     
     .lightbox-nav {

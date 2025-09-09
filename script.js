@@ -391,6 +391,14 @@ function createLightbox(src, alt, currentIndex) {
     lightbox.addEventListener('touchmove', handleGalleryTouchMove, { passive: false });
     lightbox.addEventListener('touchend', handleGalleryTouchEnd, { passive: false });
     
+    // Prevent touch events from interfering with close button
+    closeBtn.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+    });
+    closeBtn.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+    });
+    
     // Click to hide swipe hint
     const swipeHint = lightbox.querySelector('.gallery-swipe-hint');
     if (swipeHint) {
@@ -463,6 +471,11 @@ function createLightbox(src, alt, currentIndex) {
     };
     
     closeBtn.addEventListener('click', closeLightbox);
+    closeBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeLightbox();
+    });
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) {
             closeLightbox();
@@ -1063,6 +1076,14 @@ function initVideoModal() {
     modal.addEventListener('touchmove', handleTouchMove, { passive: false });
     modal.addEventListener('touchend', handleTouchEnd, { passive: false });
     
+    // Prevent touch events from interfering with close button
+    closeBtn.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+    });
+    closeBtn.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+    });
+    
     // Scroll events for desktop - will be added when modal opens
     
     // Click to hide swipe hint
@@ -1137,6 +1158,11 @@ function initVideoModal() {
     }
 
     closeBtn.addEventListener('click', closeModal);
+    closeBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeModal();
+    });
 
     // Close modal when clicking outside
     modal.addEventListener('click', (e) => {
