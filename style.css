@@ -1364,7 +1364,7 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 10002;
+    z-index: 10005;
     background: linear-gradient(135deg, #FF69B4, #FFB6C1);
     color: white;
     border: none;
@@ -1537,7 +1537,7 @@ body {
     font-size: 30px;
     font-weight: bold;
     cursor: pointer;
-    z-index: 10001;
+    z-index: 10005;
     transition: all 0.3s ease;
     background: rgba(255, 105, 180, 0.8);
     width: 40px;
@@ -3202,8 +3202,47 @@ a.social-link {
 /* Fix para evitar aumento de altura do brands-grid abaixo de 407px */
 @media (max-width: 407px) {
     .brands-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
         grid-template-rows: auto !important;
         height: auto !important;
+        gap: 0.8rem !important;
+    }
+    
+    .brand-item {
+        padding: 1rem 0.8rem !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+    
+    .brand-logo {
+        width: 120px !important;
+        height: 60px !important;
+        margin: 0 auto 0.8rem !important;
+    }
+    
+    .brand-item h3 {
+        font-size: 1rem !important;
+        margin-top: 0.5rem !important;
+    }
+}
+
+/* Ajuste adicional para telas muito pequenas */
+@media (max-width: 360px) {
+    .brands-grid {
+        gap: 0.6rem !important;
+    }
+    
+    .brand-item {
+        padding: 0.8rem 0.6rem !important;
+    }
+    
+    .brand-logo {
+        width: 100px !important;
+        height: 50px !important;
+    }
+    
+    .brand-item h3 {
+        font-size: 0.9rem !important;
     }
 }
 
