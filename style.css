@@ -39,6 +39,24 @@ body {
     --shadow-hover: 0 20px 40px rgba(255, 105, 180, 0.4);
 }
 
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+    
+    .container {
+        max-width: 100%;
+        padding: 0 15px;
+    }
+    
+    .image-placeholder,
+    .hero-photo {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
 
 .container {
     max-width: 1200px;
@@ -1393,7 +1411,7 @@ body {
 @media (min-width: 769px) {
     .scroll-instruction {
         position: absolute;
-        right: -350px;
+        right: 10px;
         top: 50%;
         transform: translateY(-50%);
         background: rgba(0, 0, 0, 0.8);
@@ -1406,6 +1424,7 @@ body {
         border: 1px solid rgba(255, 105, 180, 0.3);
         animation: pulse 2s infinite;
         white-space: nowrap;
+        max-width: 200px;
     }
 }
     
@@ -1536,7 +1555,7 @@ body {
 
 .scroll-instruction {
     position: absolute;
-    right: -350px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: rgba(0, 0, 0, 0.8);
@@ -1549,6 +1568,7 @@ body {
     border: 1px solid rgba(255, 105, 180, 0.3);
     animation: pulse 2s infinite;
     white-space: nowrap;
+    max-width: 200px;
 }
 
 /* Swipe hint for mobile */
@@ -1621,7 +1641,7 @@ body {
     .scroll-instruction {
         font-size: 12px;
         padding: 8px 16px;
-        right: -90px;
+        right: 10px;
     }
 }
 
@@ -1695,7 +1715,7 @@ body {
     }
     
     .scroll-instruction {
-        right: -70px;
+        right: 10px;
         font-size: 10px;
         padding: 6px 12px;
     }
