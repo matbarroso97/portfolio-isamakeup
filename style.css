@@ -1234,7 +1234,8 @@ body {
 .sponsored-badge {
     position: absolute;
     top: 10px;
-    right: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     background: linear-gradient(135deg, #FF69B4, #FF1493);
     color: white;
     padding: 4px 8px;
@@ -1796,7 +1797,8 @@ body {
 .sponsored-badge {
     position: absolute;
     top: 10px;
-    left: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     background: var(--primary-pink);
     color: white;
     padding: 0.3rem 0.8rem;
