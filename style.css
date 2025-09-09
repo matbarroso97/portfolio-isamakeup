@@ -1320,6 +1320,28 @@ body {
         left: 0;
         z-index: 10000;
     }
+    
+    /* Botão de fechar específico para mobile */
+    .video-close {
+        position: fixed !important;
+        top: 15px !important;
+        right: 15px !important;
+        z-index: 10015 !important;
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 24px !important;
+        background: linear-gradient(135deg, #FF69B4, #FFB6C1) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        backdrop-filter: blur(10px) !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    .video-close:hover {
+        background: linear-gradient(135deg, #FF1493, #FF69B4) !important;
+        transform: scale(1.1) !important;
+    }
 }
 
 /* Desktop Video Modal - Keep original behavior */
@@ -1364,7 +1386,7 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 10005;
+    z-index: 10010;
     background: linear-gradient(135deg, #FF69B4, #FFB6C1);
     color: white;
     border: none;
@@ -1378,6 +1400,7 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
+    pointer-events: auto;
 }
 
 .video-close:hover {
@@ -3119,11 +3142,11 @@ a.social-link {
     }
 
     #logo-shein {
-        width: 300%;
-        height: 60%;
-        transform: translate(-50%, -50%) scale(1.0);
-        left: 50%;
-        top: 50%;
+        width: 400%;
+        height: 150%;
+        transform: translate(-50%, -50%) scale(1.2);
+        left: 55%;
+        top: 90%;
     }
 
     #logo-comfort {
@@ -3206,23 +3229,55 @@ a.social-link {
         grid-template-rows: auto !important;
         height: auto !important;
         gap: 0.8rem !important;
+        align-items: stretch !important;
     }
     
     .brand-item {
         padding: 1rem 0.8rem !important;
         min-height: auto !important;
         height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
     }
     
     .brand-logo {
         width: 120px !important;
         height: 60px !important;
         margin: 0 auto 0.8rem !important;
+        flex-shrink: 0 !important;
     }
     
     .brand-item h3 {
         font-size: 1rem !important;
         margin-top: 0.5rem !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Ajuste específico para Bepantol e Comfort Brasil */
+    #logo-bepantol {
+        width: 300% !important;
+        height: 60% !important;
+        transform: translate(-50%, -50%) scale(0.9) !important;
+        left: 50% !important;
+        top: 50% !important;
+    }
+    
+    #logo-comfort {
+        width: 480% !important;
+        height: 150% !important;
+        transform: translate(-50%, -50%) scale(1.0) !important;
+        left: 50% !important;
+        top: 90% !important;
+    }
+    
+    #logo-shein {
+        width: 400% !important;
+        height: 150% !important;
+        transform: translate(-50%, -50%) scale(1.2) !important;
+        left: 50% !important;
+        top: 90% !important;
     }
 }
 
