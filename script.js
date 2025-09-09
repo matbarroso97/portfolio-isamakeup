@@ -721,12 +721,21 @@ function initVideoModal() {
     const closeBtn = document.querySelector('.video-close');
     const reelItems = document.querySelectorAll('.reel-item');
     const scrollInstruction = document.querySelector('.scroll-instruction');
+    const videoCounter = document.querySelector('.video-counter');
+    const progressBar = document.querySelector('.video-progress-bar');
+    const swipeHint = document.querySelector('.swipe-hint');
+    
+    if (!modal) return;
     
     let currentVideoIndex = 0;
     let videoList = [];
     let isScrolling = false;
     let isFirstVideo = true;
     let isMobile = window.innerWidth <= 768;
+    let touchStartY = 0;
+    let touchEndY = 0;
+    let isVideoPlaying = false;
+    let isFirstModalOpen = true;
 
     // Get all video sources
     reelItems.forEach(item => {
@@ -736,14 +745,41 @@ function initVideoModal() {
     // Update instruction text based on device
     function updateInstructionText() {
         if (isMobile) {
-            if (isFirstVideo) {
-                scrollInstruction.innerHTML = '<i class="fas fa-mouse"></i> Deslize para cima para trocar de vídeo';
-            } else {
+            // Hide desktop instruction text on mobile
+            if (scrollInstruction) {
                 scrollInstruction.style.display = 'none';
             }
+            
+            // Show swipe hint on mobile for first time
+            if (isFirstModalOpen && swipeHint) {
+                swipeHint.style.display = 'block';
+            }
         } else {
-            scrollInstruction.innerHTML = '<i class="fas fa-mouse"></i> Role para baixo para trocar de vídeo';
-            scrollInstruction.style.display = 'block';
+            // Show instruction text on desktop
+            if (scrollInstruction) {
+                scrollInstruction.innerHTML = '<i class="fas fa-mouse"></i> Role para baixo para trocar de vídeo';
+                scrollInstruction.style.display = 'block';
+            }
+            
+            // Hide swipe hint on desktop
+            if (swipeHint) {
+                swipeHint.style.display = 'none';
+            }
+        }
+    }
+
+    // Update video counter
+    function updateVideoCounter() {
+        if (videoCounter) {
+            videoCounter.textContent = `${currentVideoIndex + 1} / ${videoList.length}`;
+        }
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+        if (progressBar && modalVideo.duration) {
+            const progress = (modalVideo.currentTime / modalVideo.duration) * 100;
+            progressBar.style.width = `${progress}%`;
         }
     }
 
@@ -759,10 +795,19 @@ function initVideoModal() {
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
+            
+            // Add scroll event listener when modal opens
+            modal.addEventListener('wheel', handleWheel, { passive: false });
             document.body.style.width = '100%';
             
-            // Update instruction text
+            // Update instruction text and counter
             updateInstructionText();
+            updateVideoCounter();
+            
+            // Start progress tracking
+            if (isMobile) {
+                modalVideo.addEventListener('timeupdate', updateProgressBar);
+            }
         });
     });
 
@@ -771,37 +816,120 @@ function initVideoModal() {
         if (index >= 0 && index < videoList.length) {
             modalVideo.src = videoList[index];
             currentVideoIndex = index;
+            updateVideoCounter();
+            
+            // Reset progress bar
+            if (progressBar) {
+                progressBar.style.width = '0%';
+            }
         }
     }
 
-    // Scroll navigation (Instagram Reels style)
-    modal.addEventListener('wheel', (e) => {
+    // Touch events for mobile swipe gestures
+    function handleTouchStart(e) {
+        if (!isMobile) return;
+        touchStartY = e.touches[0].clientY;
+    }
+
+    function handleTouchMove(e) {
+        if (!isMobile) return;
+        e.preventDefault();
+    }
+
+    function handleTouchEnd(e) {
+        if (!isMobile) return;
+        touchEndY = e.changedTouches[0].clientY;
+        handleSwipe();
+    }
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartY - touchEndY;
+
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                nextVideo();
+            } else {
+                previousVideo();
+            }
+            
+            // Hide instruction on first interaction
+            if (isFirstVideo) {
+                isFirstVideo = false;
+                if (scrollInstruction) {
+                    scrollInstruction.style.display = 'none';
+                }
+            }
+            
+            // Hide swipe hint on first interaction
+            if (isFirstModalOpen && swipeHint) {
+                isFirstModalOpen = false;
+                swipeHint.style.display = 'none';
+            }
+        }
+    }
+
+    function nextVideo() {
         if (isScrolling) return;
         
         isScrolling = true;
-        e.preventDefault();
-        e.stopPropagation();
+        const nextIndex = currentVideoIndex < videoList.length - 1 ? currentVideoIndex + 1 : 0;
+        showVideo(nextIndex);
         
-        // Hide instruction after first scroll on mobile
-        if (isMobile && isFirstVideo) {
+        // Hide instruction immediately on interaction
+        if (isFirstVideo) {
             isFirstVideo = false;
-            scrollInstruction.style.display = 'none';
-        }
-        
-        if (e.deltaY > 0) {
-            // Scroll down - next video
-            const nextIndex = currentVideoIndex < videoList.length - 1 ? currentVideoIndex + 1 : 0;
-            showVideo(nextIndex);
-        } else {
-            // Scroll up - previous video
-            const prevIndex = currentVideoIndex > 0 ? currentVideoIndex - 1 : videoList.length - 1;
-            showVideo(prevIndex);
+            if (scrollInstruction) {
+                scrollInstruction.style.display = 'none';
+            }
         }
         
         setTimeout(() => {
             isScrolling = false;
         }, 500);
-    }, { passive: false });
+    }
+
+    function previousVideo() {
+        if (isScrolling) return;
+        
+        isScrolling = true;
+        const prevIndex = currentVideoIndex > 0 ? currentVideoIndex - 1 : videoList.length - 1;
+        showVideo(prevIndex);
+        
+        setTimeout(() => {
+            isScrolling = false;
+        }, 500);
+    }
+
+    // Simple scroll navigation
+    function handleWheel(e) {
+        if (isScrolling) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (e.deltaY > 0) {
+            nextVideo();
+        } else {
+            previousVideo();
+        }
+    }
+
+    // Touch events for mobile
+    modal.addEventListener('touchstart', handleTouchStart, { passive: true });
+    modal.addEventListener('touchmove', handleTouchMove, { passive: false });
+    modal.addEventListener('touchend', handleTouchEnd, { passive: true });
+    
+    // Scroll events for desktop - will be added when modal opens
+    
+    // Click to hide swipe hint
+    if (swipeHint) {
+        swipeHint.addEventListener('click', () => {
+            swipeHint.style.display = 'none';
+            isFirstModalOpen = false;
+        });
+    }
+    
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
@@ -832,7 +960,26 @@ function initVideoModal() {
         
         // Reset instruction state
         isFirstVideo = true;
+        isFirstModalOpen = true;
+        
+        // Hide swipe hint when closing modal
+        if (swipeHint) {
+            swipeHint.style.display = 'none';
+        }
+        
         updateInstructionText();
+        
+        // Reset progress bar
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+        
+        // Remove progress tracking
+        modalVideo.removeEventListener('timeupdate', updateProgressBar);
+        
+        // Remove scroll event listener
+        modal.removeEventListener('wheel', handleWheel);
+        
         
         // Restore scroll position
         const scrollY = document.body.style.top;
